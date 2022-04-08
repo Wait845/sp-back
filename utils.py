@@ -57,10 +57,10 @@ def detected_device(addr: str, distance_info: dict, circles_list: list, device_p
 
 
 def _trilaterate(circle1, circle2, circle3):
-    print(circle1, circle2, circle3)
-    P1, r1 = circle1[:3], float(circle1[3:][0])
-    P2, r2 = circle2[:3], float(circle2[3:][0])
-    P3, r3 = circle3[:3], float(circle3[3:][0])
+    # print(circle1, circle2, circle3)
+    P1, r1 = circle1[:3], circle1[3]
+    P2, r2 = circle2[:3], circle2[3]
+    P3, r3 = circle3[:3], circle3[3]
 
     temp1 = P2-P1
     e_x = temp1/norm(temp1)
@@ -120,16 +120,33 @@ def is_device_inside(distance_info: dict):
         circle = np.append(ap, distance_info[i])
         circles_list.append(circle)
 
-    device_position = _trilaterate(*circles_list)
-    print(device_position)
+    # calculate intersections
+    circles_list = sorted(circles_list, key=lambda b:b[-1])
+    b2_break = False
+    for i in range(min(10, max(5, int((circles_list[1][-1] - circles_list[0][-1]) * 10)))):
+        b3_radius = circles_list[2][-1]
+        for j in range(min(10, max(5, int((circles_list[2][-1] - circles_list[1][-1]) * 10)))):
+            device_position = _trilaterate(*circles_list)
+            if device_position:
+                b2_break = True
+                break
+            circles_list[2][-1] -= 0.1
+        if b2_break:
+            break
+        circles_list[2][-1] = b3_radius
+        circles_list[1][-1] -= 0.1
+
+
+    # device_position = _trilaterate(*circles_list)
+    print("IS DEVICE INSIDE:", circles_list)
     if device_position:
-        print("device position in True")
+        print("GOT INTERSECTION:", device_position)
         for device_p_a in device_position:
             # one of position is in the room is enough
             if _is_in_poly(device_p_a[:2], room_position) and abs(device_p_a[2]) <= room_hight:
-                print("device is in the room!")
-                print(distance_info)
-                print(circles_list)
+                print("DEVICE IS IN THE ROOM")
+                # print(distance_info)
+                # print(circles_list)
                 # print(device_position)
                 circles_list = [list(i) for i in circles_list]
                 device_position = [list(i) for i in device_position]
