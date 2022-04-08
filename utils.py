@@ -108,7 +108,7 @@ def _is_in_poly(p, poly):
     return is_in
 
 
-def is_device_inside(distance_info: dict):
+def is_device_inside(distance_info: dict, addr):
     if len(distance_info) != 3:
         return False
     circles_list = []
@@ -120,38 +120,46 @@ def is_device_inside(distance_info: dict):
         circle = np.append(ap, distance_info[i])
         circles_list.append(circle)
 
+    print("=====================================")
+    print("IS DEVICE INSIDE:", circles_list, addr)
     # calculate intersections
     circles_list = sorted(circles_list, key=lambda b:b[-1])
-    b2_break = False
+
     for i in range(min(10, max(5, int((circles_list[1][-1] - circles_list[0][-1]) * 10)))):
         b3_radius = circles_list[2][-1]
         for j in range(min(10, max(5, int((circles_list[2][-1] - circles_list[1][-1]) * 10)))):
             device_position = _trilaterate(*circles_list)
             if device_position:
-                b2_break = True
-                break
+                print("GOT INTERSECTION:", device_position)
+                for device_p_a in device_position:
+                    # one of position is in the room is enough
+                    if _is_in_poly(device_p_a[:2], room_position) and abs(device_p_a[2]) <= room_hight:
+                        print("DEVICE IS IN THE ROOM")
+                        circles_list = []
+                        device_position = []
+                        return {"distance_info": distance_info, "circles_list": circles_list, "device_position": list(device_position)}
+                    
             circles_list[2][-1] -= 0.1
-        if b2_break:
-            break
         circles_list[2][-1] = b3_radius
         circles_list[1][-1] -= 0.1
 
 
     # device_position = _trilaterate(*circles_list)
-    print("IS DEVICE INSIDE:", circles_list)
-    if device_position:
-        print("GOT INTERSECTION:", device_position)
-        for device_p_a in device_position:
-            # one of position is in the room is enough
-            if _is_in_poly(device_p_a[:2], room_position) and abs(device_p_a[2]) <= room_hight:
-                print("DEVICE IS IN THE ROOM")
-                # print(distance_info)
-                # print(circles_list)
-                # print(device_position)
-                circles_list = [list(i) for i in circles_list]
-                device_position = [list(i) for i in device_position]
-                return {"distance_info": distance_info, "circles_list": circles_list, "device_position": list(device_position)}
-        # device position: (array([3.9864    , 3.65851667, 9.25431093]), array([ 3.9864    ,  3.65851667, -9.25431093]))
+    # if device_position:
+    #     for device_p_a in device_position:
+    #         # one of position is in the room is enough
+    #         if _is_in_poly(device_p_a[:2], room_position) and abs(device_p_a[2]) <= room_hight:
+    #             print("DEVICE IS IN THE ROOM")
+    #             # circles_list = [list(i) for i in circles_list]
+    #             # device_position = [list(i) for i in device_position]
+    #             circles_list = []
+    #             device_position = []
+    #             return {"distance_info": distance_info, "circles_list": circles_list, "device_position": list(device_position)}
+    #         else:
+    #             print("NOT IN THE ROOM")
+    #     # device position: (array([3.9864    , 3.65851667, 9.25431093]), array([ 3.9864    ,  3.65851667, -9.25431093]))
+    # else:
+    #     print("NO INTERSECTION")
     return False    
 
 
@@ -213,7 +221,7 @@ def _calculate_stream(start_time: str, duration_time: int):
     #     aps["test"] = random.randint(1,15)
                 
     for addr, aps in merge_dict.items():
-        device_inside_result = is_device_inside(aps)
+        device_inside_result = is_device_inside(aps, addr)
         if device_inside_result != False:
             detected_device(addr, *device_inside_result.values())
     print(merge_dict)
