@@ -1,3 +1,4 @@
+from audioop import add
 import numpy as np
 from numpy import sqrt, dot, cross
 from numpy.linalg import norm
@@ -120,8 +121,8 @@ def is_device_inside(distance_info: dict, addr):
         circle = np.append(ap, distance_info[i])
         circles_list.append(circle)
 
-    print("=====================================")
-    print("IS DEVICE INSIDE:", circles_list, addr)
+    print("=====================================", addr)
+    print("IS DEVICE INSIDE:", circles_list)
     # calculate intersections
     circles_list = sorted(circles_list, key=lambda b:b[-1])
 

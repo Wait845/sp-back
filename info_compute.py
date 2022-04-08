@@ -8,6 +8,19 @@ def occupancy(gap_sec: int, start_time: datetime, end_time: datetime):
     """
     dao = DataAccess()
     
+    sql_get_occupancy_device = "\
+        SELECT DISTINCT addr, manuf \
+        FROM detect_stream \
+        WHERE timestamp > DATE_SUB(NOW(), INTERVAL 60 SECOND) \
+        AND addr in ( \
+            SELECT DISTINCT addr \
+            FROM detect_device \
+            WHERE timestamp > DATE_SUB(NOW(), INTERVAL 120 SECOND ) \
+            )"
+    print("============== OCCUPANCY DEVICE INFO")
+    for i in dao.execute(sql_get_occupancy_device):
+        print(i)
+
     sql_get_occupancy = "\
         SELECT * \
         FROM detect_device \
