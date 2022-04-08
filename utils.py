@@ -1,4 +1,3 @@
-from audioop import add
 import numpy as np
 from numpy import sqrt, dot, cross
 from numpy.linalg import norm
@@ -10,8 +9,10 @@ import json
 import info_compute
 import time
 import requests
+import manuf
 
 
+manuf_parser = manuf.MacParser()
 room_position = []
 room_hight = 0
 room_furniture = 0
@@ -121,7 +122,7 @@ def is_device_inside(distance_info: dict, addr):
         circle = np.append(ap, distance_info[i])
         circles_list.append(circle)
 
-    print("=====================================", addr)
+    print("=====================================", addr, manuf_parser.get_manuf_long(addr) or "unknown")
     print("IS DEVICE INSIDE:", circles_list)
     # calculate intersections
     circles_list = sorted(circles_list, key=lambda b:b[-1])
