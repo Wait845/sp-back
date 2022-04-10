@@ -91,6 +91,24 @@ def access_log():
     return json.dumps({"data":result_get_log})
 
 
+@app.route("/api/detect_log", methods=["GET"])
+def detect_log():
+    sql_get_detect = "\
+        SELECT DISTINCT addr, manuf \
+        FROM detect_stream \
+        WHERE timestamp > DATE_SUB(NOW(), INTERVAL 60 SECOND) \
+        AND addr in ( \
+            SELECT DISTINCT addr \
+            FROM detect_device \
+            WHERE timestamp > DATE_SUB(NOW(), INTERVAL 120 SECOND ) \
+            )"
+    dao = DataAccess()
+    result_get_log = dao.execute(sql_get_detect)
+    if result_get_log == None:
+        return ""
+    return json.dumps({"data": result_get_log})
+
+
 @app.route("/api/ignore_address/", methods=["GET"])
 def add_ignore_address():
     ignore_addr = request.args.get("addr")
